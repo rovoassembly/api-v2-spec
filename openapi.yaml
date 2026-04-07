@@ -1,0 +1,1723 @@
+openapi: 3.1.0
+info:
+  title: Assembly Studio API
+  version: "2"
+  description: >
+    Customer-facing API for the Assembly Studio garment ordering and configuration platform.
+    Backoffice, admin, system, and ERP endpoints are out of scope for this version.
+
+servers:
+  - url: /api/v2
+    description: TBD
+
+tags:
+  - name: Catalog
+  - name: Configuration
+  - name: Calculator
+  - name: Upload
+  - name: Cart
+  - name: Commerce
+
+paths:
+
+  # ─── Catalog ──────────────────────────────────────────────────────────────
+
+  /base-products:
+    get:
+      tags: [Catalog]
+      summary: List all base products
+      description: >
+        Returns all visible base products, pre-sorted server-side.
+        Cache: 60 minutes. `locale` is part of the cache key.
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BaseProduct'
+
+  /base-products/{slugOrId}:
+    get:
+      tags: [Catalog]
+      summary: Get a base product by slug or UUID
+      description: >
+        The server detects whether the value is a slug or UUID automatically.
+        Cache: 60 minutes. `locale` is part of the cache key.
+      parameters:
+        - name: slugOrId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseProduct'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /base-products/{slugOrId}/woven-label-options:
+    get:
+      tags: [Catalog]
+      summary: Get woven label options for a base product
+      description: >
+        Returns only options relevant to the product — neck or cap, resolved server-side.
+        Cache: 60 minutes. `locale` is part of the cache key.
+      parameters:
+        - name: slugOrId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WovenLabelOptions'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dyes:
+    get:
+      tags: [Catalog]
+      summary: List all dye categories with their colors
+      description: >
+        Returns all dye color categories, each containing their colors. Pre-sorted server-side.
+        Cache: 60 minutes. `locale` is part of the cache key.
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DyeCategory'
+
+  # ─── Configuration ────────────────────────────────────────────────────────
+
+  /configuration:
+    post:
+      tags: [Configuration]
+      summary: Create a configuration
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [baseProductId]
+              properties:
+                baseProductId:
+                  type: string
+                deliverySpeed:
+                  type: string
+                  enum: [flexible, fast]
+                  default: flexible
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+        '400':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /configuration/{id}:
+    get:
+      tags: [Configuration]
+      summary: Get a configuration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags: [Configuration]
+      summary: Update a configuration
+      description: >
+        Partially updates a configuration, including any of its customizations.
+        The backend resolves which customization record to create or modify.
+        Only send fields that need updating.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+        '400':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ─── Calculator ───────────────────────────────────────────────────────────
+
+  /calculator:
+    get:
+      tags: [Calculator]
+      summary: Calculate pricing and lead time
+      description: >
+        Computes pricing, lead time, and development costs for a product configuration.
+        Does not require a saved configuration — computes on the fly.
+        Query params support nested objects (parsed via `qs`, use deepObject style).
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+        - name: baseProductId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: color
+          in: query
+          required: true
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            required: [technique, category]
+            properties:
+              technique:
+                type: string
+                description: Dye technique ID
+              category:
+                type: string
+                description: Dye color category ID
+              dye:
+                type: string
+                description: Specific dye color ID — defaults to category default if omitted
+        - name: quantity
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: print
+          in: query
+          required: false
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              front:
+                $ref: '#/components/schemas/CalculatorPrintSideInput'
+              back:
+                $ref: '#/components/schemas/CalculatorPrintSideInput'
+              left:
+                $ref: '#/components/schemas/CalculatorPrintSideInput'
+              right:
+                $ref: '#/components/schemas/CalculatorPrintSideInput'
+        - name: wovenLabel
+          in: query
+          required: false
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              size:
+                type: string
+                description: Label size ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatorResponse'
+        '400':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  # ─── Upload ───────────────────────────────────────────────────────────────
+
+  /upload:
+    post:
+      tags: [Upload]
+      summary: Upload and optionally convert a file
+      description: >
+        Uploads a file and optionally converts it to a raster format (e.g. .ai → .png).
+        Returns a streaming NDJSON response — each newline-delimited JSON object is one event.
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+        - name: convert
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: If true, the uploaded file will also be converted
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Streaming NDJSON upload events (progress: 0–100)
+          content:
+            application/x-ndjson:
+              schema:
+                $ref: '#/components/schemas/UploadEvent'
+
+  # ─── Cart ─────────────────────────────────────────────────────────────────
+
+  /cart:
+    post:
+      tags: [Cart]
+      summary: Create a cart
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/{cartId}:
+    get:
+      tags: [Cart]
+      summary: Get a cart
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '404':
+          description: Not found or invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /cart/{cartId}/items:
+    post:
+      tags: [Cart]
+      summary: Add a line item to the cart
+      description: Pricing is resolved and locked server-side at this point.
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [configurationId, quantity]
+              properties:
+                configurationId:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/{cartId}/items/{itemId}:
+    put:
+      tags: [Cart]
+      summary: Update a line item's size allocations
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sizeAllocations]
+              properties:
+                sizeAllocations:
+                  type: array
+                  items:
+                    type: object
+                    required: [size, quantity]
+                    properties:
+                      size:
+                        type: string
+                        example: L
+                      quantity:
+                        type: integer
+                        minimum: 0
+      responses:
+        '200':
+          description: Updated line item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartLineItem'
+        '400':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+    delete:
+      tags: [Cart]
+      summary: Remove a line item from the cart
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/{cartId}/addresses:
+    patch:
+      tags: [Cart]
+      summary: Set billing and/or shipping addresses
+      description: >
+        Supports progressive saves — call as the user fills in the form so data
+        is not lost on page refresh. Full validation only happens at checkout.
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                billingAddress:
+                  $ref: '#/components/schemas/AddressInput'
+                shippingAddress:
+                  $ref: '#/components/schemas/ShippingAddressInput'
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/{cartId}/shipping:
+    patch:
+      tags: [Cart]
+      summary: Set the selected shipping option
+      description: >
+        Shipping options are fetched from GET /cart/{cartId}/shipping-options.
+        The frontend selects one and calls this endpoint to persist the choice.
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, cost, deliveryDate, predefinedDeliveryDate]
+              properties:
+                method:
+                  type: string
+                  enum: [standard, express]
+                cost:
+                  type: number
+                deliveryDate:
+                  type: string
+                  format: date
+                  description: Customer-chosen delivery date
+                predefinedDeliveryDate:
+                  type: string
+                  format: date
+                  description: Default fastest date using standard shipping
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/{cartId}/discount-code:
+    patch:
+      tags: [Cart]
+      summary: Apply or remove a discount code
+      description: >
+        The backend validates the code and returns the updated cart with pricing recalculated.
+        Send `code: null` to remove the current discount.
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  nullable: true
+                  description: Discount code to apply, or null to remove
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          description: Invalid, expired, or ineligible discount code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /cart/{cartId}/shipping-options:
+    get:
+      tags: [Cart]
+      summary: Get available shipping options for a cart
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+          description: ISO 3166-1 alpha-2 destination country code
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShippingOptions'
+        '404':
+          description: Cart not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /cart/{cartId}/checkout:
+    post:
+      tags: [Cart]
+      summary: Create an order from a cart
+      description: >
+        The cart must have billing/shipping addresses and a shipping option set.
+        VAT rate (derived from shipping address), shipping cost, product availability,
+        and discount code decrements are all resolved server-side.
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Locale'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentMethod]
+              properties:
+                poNumber:
+                  type: string
+                  description: Customer purchase order number
+                orderNotes:
+                  type: string
+                paymentMethod:
+                  type: string
+                  enum: [bank, card, klarna]
+      responses:
+        '200':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  orderNumber:
+                    type: string
+                  fulfillmentStatus:
+                    type: string
+                    enum: [PENDING]
+                  paymentMethod:
+                    type: string
+                    enum: [bank, card, klarna]
+                  createdAt:
+                    type: string
+                    format: date-time
+        '400':
+          description: Cart missing required data (addresses or shipping option)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: A product in the cart is no longer available in the requested quantities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ─── Commerce ─────────────────────────────────────────────────────────────
+
+  /vat/{vatNumber}:
+    get:
+      tags: [Commerce]
+      summary: Validate a VAT number
+      description: Validates against external providers (VIES and/or vatLayer).
+      parameters:
+        - name: vatNumber
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 'VAT number to validate, e.g. GB123456789'
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VatValidationResponse'
+        '400':
+          description: Missing or malformed VAT number
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: VAT number not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+# ─── Components ─────────────────────────────────────────────────────────────
+
+components:
+
+  parameters:
+
+    Locale:
+      name: locale
+      in: query
+      required: false
+      schema:
+        type: string
+        default: en
+        example: pt
+      description: >
+        BCP 47 locale tag (e.g. `en`, `pt`, `fr`). Defaults to `en` when absent or unrecognized.
+        Uses `Accept-Language` header as fallback when not provided.
+        Untranslated content falls back silently to `en`.
+        This parameter is part of the cache key on cacheable endpoints.
+
+  schemas:
+
+    # ── Catalog ─────────────────────────────────────────────────────────────
+
+    BaseProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        slug:
+          type: string
+        sku:
+          type: string
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            productType:
+              type: string
+              enum: [garments, caps, accessories]
+        composition:
+          type: string
+          example: 100% Cotton
+        fabricWeight:
+          type: string
+          example: 180gsm
+        moqQty:
+          type: integer
+        lowMoqQty:
+          type: integer
+          nullable: true
+        productImage:
+          type: string
+          description: Ghost/flat shot — white background, no model
+        lifestyleImage:
+          type: string
+        marketingImages:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        configuration:
+          type: object
+          properties:
+            customizations:
+              type: object
+              properties:
+                dye:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      description: Display name — e.g. "Color" or "Cap Color"
+                    techniques:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          title:
+                            type: string
+                          slug:
+                            type: string
+                print:
+                  type: object
+                  properties:
+                    sides:
+                      type: array
+                      items:
+                        type: string
+                        enum: [front, back, left, right]
+                    techniques:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/PrintTechnique'
+                    placements:
+                      type: object
+                      nullable: true
+                      properties:
+                        front:
+                          type: array
+                          nullable: true
+                          items:
+                            $ref: '#/components/schemas/PrintPlacement'
+                        back:
+                          type: array
+                          nullable: true
+                          items:
+                            $ref: '#/components/schemas/PrintPlacement'
+                label:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      description: Display name — e.g. "Neck Label" or "Cap Label"
+                    sizes:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/LabelSize'
+
+    PrintTechnique:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        thumbnail:
+          type: string
+        type:
+          type: string
+          enum: [screenPrint, dtf, dtg, hybridDtg, embroidery, heatTransfer]
+        requiresFoilColor:
+          type: boolean
+          description: true only for heatTransfer — show foil color selector in UI
+
+    PrintPlacement:
+      type: object
+      properties:
+        title:
+          type: string
+        width:
+          type: number
+        height:
+          type: number
+        fromCenter:
+          type: number
+          description: Horizontal offset from center of print area (negative = left)
+        fromYOrigin:
+          type: number
+          description: Vertical offset from neck seam
+
+    LabelSize:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        slug:
+          type: string
+        thumbnail:
+          type: string
+        sampleArtworkUrl:
+          type: string
+          nullable: true
+          description: Original sample file — for demo/testing flow
+        sampleArtworkConvertedUrl:
+          type: string
+          nullable: true
+          description: Converted sample file — for demo/testing flow
+
+    WovenLabelOptions:
+      type: object
+      properties:
+        placements:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              stitchingOptions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    title:
+                      type: string
+        sizes:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabelSize'
+
+    DyeCategory:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        slug:
+          type: string
+        defaultDyeId:
+          type: string
+          description: ID of the default pre-selected color in this category
+        dyes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              hexCode:
+                type: string
+
+    # ── Configuration ───────────────────────────────────────────────────────
+
+    Configuration:
+      type: object
+      properties:
+        id:
+          type: string
+        deliverySpeed:
+          type: string
+          enum: [flexible, fast]
+        mockups:
+          type: object
+          properties:
+            front:
+              type: string
+              nullable: true
+            back:
+              type: string
+              nullable: true
+            left:
+              type: string
+              nullable: true
+            right:
+              type: string
+              nullable: true
+            label:
+              type: string
+              nullable: true
+        defaultMockup:
+          type: string
+          nullable: true
+          description: Always mirrors mockups.front when set
+        baseProduct:
+          $ref: '#/components/schemas/BaseProduct'
+        dye:
+          nullable: true
+          type: object
+          properties:
+            technique:
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+                slug:
+                  type: string
+            color:
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+                hexCode:
+                  type: string
+                pantoneRef:
+                  type: string
+                  nullable: true
+        print:
+          nullable: true
+          type: object
+          properties:
+            minProductSize:
+              type: string
+              nullable: true
+              description: Minimum garment/product size selected by user — e.g. "L"
+            front:
+              $ref: '#/components/schemas/PrintSide'
+            back:
+              $ref: '#/components/schemas/PrintSide'
+            left:
+              $ref: '#/components/schemas/PrintSide'
+            right:
+              $ref: '#/components/schemas/PrintSide'
+        label:
+          nullable: true
+          type: object
+          properties:
+            size:
+              nullable: true
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+            placement:
+              nullable: true
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+            stitching:
+              nullable: true
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+            artworkOriginalUrl:
+              type: string
+              nullable: true
+            artworkConvertedUrl:
+              type: string
+              nullable: true
+            artworkConvertedPngUrl:
+              type: string
+              nullable: true
+            colorCount:
+              type: integer
+              nullable: true
+
+    ConfigurationUpdate:
+      type: object
+      description: All fields optional — only send what needs updating
+      properties:
+        deliverySpeed:
+          type: string
+          enum: [flexible, fast]
+        mockups:
+          type: object
+          properties:
+            front:
+              type: string
+              nullable: true
+            back:
+              type: string
+              nullable: true
+            left:
+              type: string
+              nullable: true
+            right:
+              type: string
+              nullable: true
+            label:
+              type: string
+              nullable: true
+        defaultMockup:
+          type: string
+          nullable: true
+        dye:
+          nullable: true
+          type: object
+          properties:
+            techniqueId:
+              type: string
+            colorId:
+              type: string
+        print:
+          nullable: true
+          type: object
+          properties:
+            minProductSize:
+              type: string
+              nullable: true
+            front:
+              $ref: '#/components/schemas/PrintSideInput'
+            back:
+              $ref: '#/components/schemas/PrintSideInput'
+            left:
+              $ref: '#/components/schemas/PrintSideInput'
+            right:
+              $ref: '#/components/schemas/PrintSideInput'
+        label:
+          nullable: true
+          type: object
+          properties:
+            sizeId:
+              type: string
+              nullable: true
+            placementId:
+              type: string
+              nullable: true
+            stitchingId:
+              type: string
+              nullable: true
+            artworkOriginalUrl:
+              type: string
+              nullable: true
+            artworkConvertedUrl:
+              type: string
+              nullable: true
+            artworkConvertedPngUrl:
+              type: string
+              nullable: true
+            colorCount:
+              type: integer
+              nullable: true
+
+    # ── Shared Types ────────────────────────────────────────────────────────
+
+    Address:
+      type: object
+      required: [firstName, lastName, email, addressLine1, zip, city, country, countryCode, phone]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        company:
+          type: string
+          nullable: true
+        vatNumber:
+          type: string
+          description: Billing address only — not applicable for shipping address
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+          nullable: true
+        zip:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+          nullable: true
+          description: Optional — not required for countries without states
+        country:
+          type: string
+        countryCode:
+          type: string
+          description: ISO 3166-1 alpha-2
+          minLength: 2
+          maxLength: 2
+        phone:
+          type: string
+
+    AddressInput:
+      type: object
+      description: Partial billing address — all fields optional for progressive save
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        company:
+          type: string
+          nullable: true
+        vatNumber:
+          type: string
+          nullable: true
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+          nullable: true
+        zip:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+        phone:
+          type: string
+
+    ShippingAddressInput:
+      type: object
+      description: Partial shipping address — vatNumber not applicable here
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        company:
+          type: string
+          nullable: true
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+          nullable: true
+        zip:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+        phone:
+          type: string
+
+    PrintSide:
+      type: object
+      description: Represents a single configured print side on a saved configuration (response shape)
+      properties:
+        technique:
+          nullable: true
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            type:
+              type: string
+              enum: [screenPrint, dtf, dtg, hybridDtg, embroidery, heatTransfer]
+        fromCenter:
+          type: number
+          description: Horizontal distance from center — positive = right, negative = left
+        fromYOrigin:
+          type: number
+          description: Vertical distance from y-axis origin (neck seam)
+        artworkWidth:
+          type: number
+        artworkHeight:
+          type: number
+        artworkRatio:
+          type: number
+        artworkOriginalUrl:
+          type: string
+          nullable: true
+        artworkConvertedUrl:
+          type: string
+          nullable: true
+        foilColor:
+          nullable: true
+          description: Only applicable when technique.type is heatTransfer
+          type: object
+          properties:
+            id:
+              type: string
+            colour:
+              type: string
+            hexCode:
+              type: string
+            pantoneCode:
+              type: string
+
+    PrintSideInput:
+      type: object
+      description: Input shape for writing a print side via PATCH /configuration/{id}
+      properties:
+        techniqueId:
+          type: string
+          nullable: true
+        fromCenter:
+          type: number
+        fromYOrigin:
+          type: number
+        artworkWidth:
+          type: number
+        artworkHeight:
+          type: number
+        artworkRatio:
+          type: number
+        artworkOriginalUrl:
+          type: string
+          nullable: true
+        artworkConvertedUrl:
+          type: string
+          nullable: true
+        foilColorId:
+          type: string
+          nullable: true
+          description: Only applicable when technique is heatTransfer
+
+    # ── Calculator ──────────────────────────────────────────────────────────
+
+    CalculatorPrintSideInput:
+      type: object
+      properties:
+        techniqueId:
+          type: string
+        artwork:
+          type: object
+          properties:
+            colors:
+              type: integer
+              minimum: 1
+            size:
+              type: object
+              description: Defaults to 5x5 if omitted
+              properties:
+                width:
+                  type: number
+                height:
+                  type: number
+
+    CalculatorResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          description: Echo of the input params used for this calculation
+          properties:
+            baseProductId:
+              type: string
+            color:
+              type: object
+              properties:
+                technique:
+                  type: string
+                category:
+                  type: string
+                dye:
+                  type: string
+            quantity:
+              type: integer
+            print:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/CalculatorPrintSideInput'
+            wovenLabel:
+              type: object
+              properties:
+                size:
+                  type: string
+        result:
+          type: object
+          properties:
+            leadTime:
+              type: integer
+              description: Production days
+            deliveryDate:
+              type: string
+              format: date
+              description: Estimated delivery date (ISO date string)
+            price:
+              type: number
+              description: Cost per item (EUR)
+            developmentCosts:
+              type: object
+              properties:
+                artwork:
+                  type: number
+                screen:
+                  type: number
+                technique:
+                  type: number
+                service:
+                  type: number
+            developmentCostsTotal:
+              type: number
+            subtotal:
+              type: number
+              description: (price × quantity) + developmentCostsTotal, rounded to 2dp
+
+    Error:
+      type: object
+      required: [code, message]
+      description: >
+        Standard error shape. Use `code` for programmatic error handling.
+        `message` is informational only — do not parse or display it to users.
+      properties:
+        code:
+          type: string
+          description: Machine-readable error identifier in UPPER_SNAKE_CASE (e.g. CART_NOT_FOUND)
+        message:
+          type: string
+          description: Human-readable debugging hint — not part of the stable contract
+
+    ValidationError:
+      type: object
+      required: [code, message, errors]
+      description: Returned on 400 when request fails field-level validation.
+      properties:
+        code:
+          type: string
+          enum: [VALIDATION_ERROR]
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field:
+                type: string
+                description: Dot-notation field path — e.g. "billingAddress.email"
+              code:
+                type: string
+                description: UPPER_SNAKE_CASE error code — e.g. REQUIRED, INVALID_FORMAT
+
+    Pagination:
+      type: object
+      required: [page, limit, total, totalPages]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page (1-indexed)
+        limit:
+          type: integer
+          description: Items per page
+        total:
+          type: integer
+          description: Total items across all pages
+        totalPages:
+          type: integer
+          description: ceil(total / limit) — computed server-side
+
+    # ── Upload ──────────────────────────────────────────────────────────────
+
+    UploadEvent:
+      description: One of four possible streaming NDJSON events
+      oneOf:
+        - description: Upload started
+          type: object
+          properties:
+            event:
+              type: string
+              enum: [start]
+            progress:
+              type: number
+            step:
+              type: object
+              properties:
+                current:
+                  type: integer
+                total:
+                  type: integer
+        - description: Progress update
+          type: object
+          properties:
+            event:
+              type: string
+              enum: [progress]
+            progress:
+              type: number
+            step:
+              type: object
+              properties:
+                current:
+                  type: integer
+                total:
+                  type: integer
+        - description: Upload complete
+          type: object
+          properties:
+            event:
+              type: string
+              enum: [result]
+            progress:
+              type: number
+              enum: [100]
+            originalUrl:
+              type: string
+            convertedUrl:
+              type: string
+              nullable: true
+              description: null when convert was not requested or produced no output
+        - description: Upload failed
+          type: object
+          properties:
+            event:
+              type: string
+              enum: [error]
+            progress:
+              type: number
+            message:
+              type: string
+
+    # ── Cart ────────────────────────────────────────────────────────────────
+
+    Cart:
+      type: object
+      properties:
+        id:
+          type: string
+        discountCode:
+          nullable: true
+          type: object
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+              enum: [fixed, percentage]
+            code:
+              type: string
+            amount:
+              type: number
+            scope:
+              type: string
+              enum: [products-only, excludes-shipping, order-total]
+        shippingOption:
+          nullable: true
+          type: object
+          properties:
+            method:
+              type: string
+              enum: [standard, express]
+            cost:
+              type: number
+            deliveryDate:
+              type: string
+              format: date
+              description: Customer-chosen delivery date
+            predefinedDeliveryDate:
+              type: string
+              format: date
+              description: Default fastest date using standard shipping
+        billingAddress:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          nullable: true
+        shippingAddress:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          nullable: true
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartLineItem'
+
+    CartLineItem:
+      type: object
+      properties:
+        id:
+          type: string
+        configuration:
+          $ref: '#/components/schemas/Configuration'
+        sizeAllocations:
+          type: array
+          items:
+            type: object
+            properties:
+              size:
+                type: string
+                example: L
+              quantity:
+                type: integer
+        isReorder:
+          type: boolean
+          description: true when this line item originated from a previous order
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        productSubtotal:
+          type: number
+        artworkFee:
+          type: number
+        screenFee:
+          type: number
+        techniqueFee:
+          type: number
+        serviceFee:
+          type: number
+        developmentCostsSubtotal:
+          type: number
+        subtotal:
+          type: number
+        discountAbsoluteValue:
+          type: number
+        subtotalAfterDiscount:
+          type: number
+        vatCost:
+          type: number
+        lineTotal:
+          type: number
+
+    ShippingOptions:
+      type: object
+      properties:
+        dates:
+          type: array
+          items:
+            type: object
+            properties:
+              deliveryDate:
+                type: string
+                format: date
+                description: Estimated delivery date
+              shippingCost:
+                type: number
+                description: EUR
+              service:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [standard, express]
+                  name:
+                    type: string
+                  carrier:
+                    type: string
+                    enum: [ups, fedex]
+                  transitTime:
+                    type: object
+                    properties:
+                      days:
+                        type: integer
+                      bufferDays:
+                        type: integer
+              category:
+                type: string
+                enum: [fast, standard, long-term]
+        manualQuoteRequired:
+          type: boolean
+          description: true when automated pricing is unavailable
+        error:
+          type: string
+
+    # ── Commerce ────────────────────────────────────────────────────────────
+
+    VatValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        formatIsValid:
+          type: boolean
+        vatNumber:
+          type: string
+        countryCode:
+          type: string
+        companyName:
+          type: string
+        address:
+          type: string
+        source:
+          type: string
+          enum: [vies, vat-layer]
+        unavailable:
+          type: boolean
+          description: true when the validation service is temporarily unavailable
+        error:
+          type: string
