@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Assembly Studio API v2 OpenAPI specification",
   "scripts": {
+    "build": "redocly build-docs openapi.yaml -o public/index.html",
     "lint": "redocly lint openapi.yaml",
     "prepare": "husky"
   },
