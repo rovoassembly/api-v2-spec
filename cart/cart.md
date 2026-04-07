@@ -10,43 +10,7 @@ See [_types.md](./_types.md) for `Cart`, `CartLineItem`.
 
 ## Checkout Flow
 
-The cart progresses through three states before an order can be created. Line item changes invalidate the shipping option but never the addresses.
-
-```mermaid
-stateDiagram-v2
-    [*] --> NeedsAddresses : POST /items\nauto-creates cart · shippingOption = null
-
-    NeedsAddresses --> NeedsAddresses : POST /items · PUT /items/[id] · DELETE /items/[id]
-
-    NeedsAddresses --> NeedsShipping : PATCH /addresses
-
-    NeedsShipping --> NeedsShipping : POST /items · PUT /items/[id] · DELETE /items/[id]\nshippingOption = null
-
-    NeedsShipping --> NeedsShipping : PATCH /addresses (countryCode changed)\nshippingOption = null
-
-    NeedsShipping --> NeedsShipping : PATCH /addresses (other fields)
-
-    NeedsShipping --> Ready : PATCH /shipping\nshippingOption set
-
-    Ready --> NeedsShipping : POST /items · PUT /items/[id] · DELETE /items/[id]\nshippingOption = null
-
-    Ready --> NeedsShipping : PATCH /addresses (countryCode changed)\nshippingOption = null
-
-    Ready --> Ready : PATCH /addresses (other fields)\nPATCH /discount-code
-
-    Ready --> [*] : POST /checkout\n✓ items · ✓ billingAddress · ✓ shippingAddress · ✓ shippingOption → Order
-```
-
-**Shipping option invalidation rules:**
-- Adding, updating, or removing a line item sets `shippingOption = null`
-- Changing `shippingAddress.countryCode` sets `shippingOption = null`
-- All other address field changes and discount code changes have no effect on `shippingOption`
-
-**Checkout gates** — `POST /checkout` returns `400` if any of these are missing:
-- At least one line item
-- `billingAddress`
-- `shippingAddress`
-- `shippingOption`
+See [checkout.md](./checkout.md) for the full state diagram, shipping option invalidation rules, and checkout gates.
 
 ---
 
