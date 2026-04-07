@@ -20,7 +20,7 @@ All Sanity CMS metadata stripped from public API responses:
 Pricing bands (`price: Array<{ minQuantity, price }>`) removed from all catalog objects (base products, dye categories, label sizes). The `/calculator` endpoint handles all price calculations.
 
 ### Cart is now the checkout session
-The cart accumulates all checkout state — addresses, shipping option, discount code — before order creation. `POST /order` only requires a `cartId`.
+The cart accumulates all checkout state — addresses, shipping option, discount code — before order creation. `POST /cart/[cartId]/checkout` only requires a `cartId`.
 
 ### Customization CRUD collapsed
 Individual customization sub-routes removed. All configuration updates go through `PATCH /configuration/[id]`. The backend resolves which customization to create or modify.

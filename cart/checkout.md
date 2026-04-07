@@ -53,7 +53,7 @@ stateDiagram-v2
 
 ### `PATCH /cart/[cartId]/addresses`
 
-Sets or partially updates the billing address, shipping address, and customer contact details. Supports progressive saves — call as the user fills in the form so data is not lost on page refresh. Validation of required fields only happens at `POST /order` time.
+Sets or partially updates the billing address, shipping address, and customer contact details. Supports progressive saves — call as the user fills in the form so data is not lost on page refresh. Validation of required fields only happens at `POST /cart/[cartId]/checkout` time.
 
 **Path params:**
 | Param | Type |

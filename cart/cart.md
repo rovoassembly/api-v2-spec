@@ -1,8 +1,8 @@
 # Cart API (v2)
 
-The cart is the checkout session. It accumulates all data needed to place an order: line items, addresses, shipping option, and discount code. `POST /order` only requires a `cartId`.
+The cart is the checkout session. It accumulates all data needed to place an order: line items, addresses, shipping option, and discount code. `POST /cart/[cartId]/checkout` only requires a `cartId`.
 
-A cart is created automatically when the first line item is added via `POST /cart/line-item` — there is no separate cart creation step.
+A cart is created automatically when the first line item is added via `POST /cart/[cartId]/items` — there is no separate cart creation step.
 
 See [_types.md](./_types.md) for `Cart`, `CartLineItem`.
 
