@@ -328,32 +328,13 @@ paths:
                   format: binary
       responses:
         '200':
-          description: Streaming NDJSON upload events (progress: 0–100)
+          description: "Streaming NDJSON upload events (progress: 0\u2013100)"
           content:
             application/x-ndjson:
               schema:
                 $ref: '#/components/schemas/UploadEvent'
 
   # ─── Cart ─────────────────────────────────────────────────────────────────
-
-  /cart:
-    post:
-      tags: [Cart]
-      summary: Create a cart
-      parameters:
-        - $ref: '#/components/parameters/Locale'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cart'
 
   /cart/{cartId}:
     get:
@@ -830,6 +811,10 @@ components:
                             type: string
                           slug:
                             type: string
+                          dyeCategories:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/DyeCategoryBase'
                 print:
                   type: object
                   properties:
@@ -947,8 +932,9 @@ components:
           items:
             $ref: '#/components/schemas/LabelSize'
 
-    DyeCategory:
+    DyeCategoryBase:
       type: object
+      description: Dye category without the colors list — embedded in BaseProduct dye techniques
       properties:
         id:
           type: string
@@ -962,17 +948,23 @@ components:
         defaultDyeId:
           type: string
           description: ID of the default pre-selected color in this category
-        dyes:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-              title:
-                type: string
-              hexCode:
-                type: string
+
+    DyeCategory:
+      allOf:
+        - $ref: '#/components/schemas/DyeCategoryBase'
+        - type: object
+          properties:
+            dyes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  hexCode:
+                    type: string
 
     # ── Configuration ───────────────────────────────────────────────────────
 
