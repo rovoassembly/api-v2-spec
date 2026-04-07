@@ -1,0 +1,24 @@
+{
+  "name": "assembly-api-v2-spec",
+  "version": "2.0.0",
+  "description": "Assembly Studio API v2 OpenAPI specification",
+  "scripts": {
+    "lint": "redocly lint openapi.yaml",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rovoassembly/api-v2-spec.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rovoassembly/api-v2-spec/issues"
+  },
+  "homepage": "https://github.com/rovoassembly/api-v2-spec#readme",
+  "devDependencies": {
+    "@redocly/cli": "^2.25.4",
+    "husky": "^9.1.7"
+  }
+}
