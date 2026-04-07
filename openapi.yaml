@@ -529,21 +529,12 @@ paths:
           application/json:
             schema:
               type: object
-              required: [method, cost, deliveryDate, predefinedDeliveryDate]
+              required: [deliveryDate]
               properties:
-                method:
-                  type: string
-                  enum: [standard, express]
-                cost:
-                  type: number
                 deliveryDate:
                   type: string
                   format: date
-                  description: Customer-chosen delivery date
-                predefinedDeliveryDate:
-                  type: string
-                  format: date
-                  description: Default fastest date using standard shipping
+                  description: Customer-chosen delivery date. Uniquely identifies the shipping option — the server resolves method, carrier, cost, and predefinedDeliveryDate from this value.
       responses:
         '200':
           description: Updated cart
@@ -1528,10 +1519,12 @@ components:
               type: string
               format: date
               description: Customer-chosen delivery date
-            predefinedDeliveryDate:
+            carrier:
               type: string
-              format: date
-              description: Default fastest date using standard shipping
+              enum: [ups, fedex]
+            serviceName:
+              type: string
+              description: Human-readable service name, e.g. "UPS Express Saver"
         billingAddress:
           oneOf:
             - $ref: '#/components/schemas/Address'

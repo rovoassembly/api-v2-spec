@@ -144,7 +144,7 @@ Returns available shipping options with costs and estimated delivery dates for a
 
 ### Notes
 
-`predefinedDeliveryDate` is the first `standard`-category option's `deliveryDate`. Both values are then sent to `PATCH /cart/[cartId]/shipping` when the user confirms their choice.
+`predefinedDeliveryDate` is the first `standard`-category option's `deliveryDate`. It is stored server-side when the shipping option is saved and is not sent by the client.
 
 ---
 
@@ -163,12 +163,11 @@ Sets the selected shipping option. Shipping options are fetched from `GET /cart/
 
 ```ts
 {
-  method: 'standard' | 'express'
-  cost: number
-  deliveryDate: string           // customer-chosen date (ISO date string)
-  predefinedDeliveryDate: string // default fastest date / standard shipping (ISO date string)
+  deliveryDate: string // customer-chosen date (ISO date string)
 }
 ```
+
+> **Design note:** Only `deliveryDate` is sent. For a given destination and cart, each date maps to exactly one shipping option (method, carrier, cost), so `deliveryDate` alone is sufficient to identify the selection. `cost`, `method`, and `predefinedDeliveryDate` are all server-resolved and never trusted from the client. An earlier team discussion considered echoing `cost` back for stale-price detection — ruled out because shipping option invalidation on cart changes (see state machine above) already handles that, and a client-supplied price adds attack surface without benefit.
 
 **Response:** Updated `Cart`
 

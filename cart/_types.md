@@ -23,9 +23,12 @@ interface Cart {
   shippingOption: {
     method: 'standard' | 'express'
     cost: number
-    deliveryDate: string           // customer-chosen delivery date (ISO date string)
-    predefinedDeliveryDate: string // default fastest date using standard shipping (ISO date string)
+    deliveryDate: string  // customer-chosen delivery date (ISO date string)
+    carrier: 'ups' | 'fedex'
+    serviceName: string   // human-readable service name, e.g. "UPS Express Saver"
   } | null
+  // Note: predefinedDeliveryDate is persisted in the database but intentionally excluded
+  // from the API response — it is an internal value used for order processing.
 
   billingAddress: Address | null   // see _shared-types.md
   shippingAddress: Address | null
