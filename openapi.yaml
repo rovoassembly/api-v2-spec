@@ -5,18 +5,28 @@ info:
   description: >
     Customer-facing API for the Assembly Studio garment ordering and configuration platform.
     Backoffice, admin, system, and ERP endpoints are out of scope for this version.
+  license:
+    name: Proprietary
 
 servers:
   - url: /api/v2
     description: TBD
 
+security: []
+
 tags:
   - name: Catalog
+    description: Base products and dye options available for configuration.
   - name: Configuration
+    description: Create and manage garment configurations.
   - name: Calculator
+    description: Price and lead-time estimation.
   - name: Upload
+    description: File upload and conversion.
   - name: Cart
+    description: Cart management, checkout, and order placement.
   - name: Commerce
+    description: VAT validation and other commerce utilities.
 
 paths:
 
@@ -565,8 +575,7 @@ paths:
               required: [code]
               properties:
                 code:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
                   description: Discount code to apply, or null to remove
       responses:
         '200':
@@ -775,8 +784,7 @@ components:
         moqQty:
           type: integer
         lowMoqQty:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
         productImage:
           type: string
           description: Ghost/flat shot — white background, no model
@@ -828,17 +836,14 @@ components:
                       items:
                         $ref: '#/components/schemas/PrintTechnique'
                     placements:
-                      type: object
-                      nullable: true
+                      type: [object, 'null']
                       properties:
                         front:
-                          type: array
-                          nullable: true
+                          type: [array, 'null']
                           items:
                             $ref: '#/components/schemas/PrintPlacement'
                         back:
-                          type: array
-                          nullable: true
+                          type: [array, 'null']
                           items:
                             $ref: '#/components/schemas/PrintPlacement'
                 label:
@@ -898,12 +903,10 @@ components:
         thumbnail:
           type: string
         sampleArtworkUrl:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Original sample file — for demo/testing flow
         sampleArtworkConvertedUrl:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Converted sample file — for demo/testing flow
 
     WovenLabelOptions:
@@ -941,8 +944,7 @@ components:
         title:
           type: string
         description:
-          type: string
-          nullable: true
+          type: [string, 'null']
         slug:
           type: string
         defaultDyeId:
@@ -980,29 +982,22 @@ components:
           type: object
           properties:
             front:
-              type: string
-              nullable: true
+              type: [string, 'null']
             back:
-              type: string
-              nullable: true
+              type: [string, 'null']
             left:
-              type: string
-              nullable: true
+              type: [string, 'null']
             right:
-              type: string
-              nullable: true
+              type: [string, 'null']
             label:
-              type: string
-              nullable: true
+              type: [string, 'null']
         defaultMockup:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Always mirrors mockups.front when set
         baseProduct:
           $ref: '#/components/schemas/BaseProduct'
         dye:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             technique:
               type: object
@@ -1023,15 +1018,12 @@ components:
                 hexCode:
                   type: string
                 pantoneRef:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
         print:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             minProductSize:
-              type: string
-              nullable: true
+              type: [string, 'null']
               description: Minimum garment/product size selected by user — e.g. "L"
             front:
               $ref: '#/components/schemas/PrintSide'
@@ -1042,45 +1034,37 @@ components:
             right:
               $ref: '#/components/schemas/PrintSide'
         label:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             size:
-              nullable: true
-              type: object
+              type: [object, 'null']
               properties:
                 id:
                   type: string
                 title:
                   type: string
             placement:
-              nullable: true
-              type: object
+              type: [object, 'null']
               properties:
                 id:
                   type: string
                 title:
                   type: string
             stitching:
-              nullable: true
-              type: object
+              type: [object, 'null']
               properties:
                 id:
                   type: string
                 title:
                   type: string
             artworkOriginalUrl:
-              type: string
-              nullable: true
+              type: [string, 'null']
             artworkConvertedUrl:
-              type: string
-              nullable: true
+              type: [string, 'null']
             artworkConvertedPngUrl:
-              type: string
-              nullable: true
+              type: [string, 'null']
             colorCount:
-              type: integer
-              nullable: true
+              type: [integer, 'null']
 
     ConfigurationUpdate:
       type: object
@@ -1093,38 +1077,29 @@ components:
           type: object
           properties:
             front:
-              type: string
-              nullable: true
+              type: [string, 'null']
             back:
-              type: string
-              nullable: true
+              type: [string, 'null']
             left:
-              type: string
-              nullable: true
+              type: [string, 'null']
             right:
-              type: string
-              nullable: true
+              type: [string, 'null']
             label:
-              type: string
-              nullable: true
+              type: [string, 'null']
         defaultMockup:
-          type: string
-          nullable: true
+          type: [string, 'null']
         dye:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             techniqueId:
               type: string
             colorId:
               type: string
         print:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             minProductSize:
-              type: string
-              nullable: true
+              type: [string, 'null']
             front:
               $ref: '#/components/schemas/PrintSideInput'
             back:
@@ -1134,30 +1109,22 @@ components:
             right:
               $ref: '#/components/schemas/PrintSideInput'
         label:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             sizeId:
-              type: string
-              nullable: true
+              type: [string, 'null']
             placementId:
-              type: string
-              nullable: true
+              type: [string, 'null']
             stitchingId:
-              type: string
-              nullable: true
+              type: [string, 'null']
             artworkOriginalUrl:
-              type: string
-              nullable: true
+              type: [string, 'null']
             artworkConvertedUrl:
-              type: string
-              nullable: true
+              type: [string, 'null']
             artworkConvertedPngUrl:
-              type: string
-              nullable: true
+              type: [string, 'null']
             colorCount:
-              type: integer
-              nullable: true
+              type: [integer, 'null']
 
     # ── Shared Types ────────────────────────────────────────────────────────
 
@@ -1173,23 +1140,20 @@ components:
           type: string
           format: email
         company:
-          type: string
-          nullable: true
+          type: [string, 'null']
         vatNumber:
           type: string
           description: Billing address only — not applicable for shipping address
         addressLine1:
           type: string
         addressLine2:
-          type: string
-          nullable: true
+          type: [string, 'null']
         zip:
           type: string
         city:
           type: string
         state:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Optional — not required for countries without states
         country:
           type: string
@@ -1213,23 +1177,19 @@ components:
           type: string
           format: email
         company:
-          type: string
-          nullable: true
+          type: [string, 'null']
         vatNumber:
-          type: string
-          nullable: true
+          type: [string, 'null']
         addressLine1:
           type: string
         addressLine2:
-          type: string
-          nullable: true
+          type: [string, 'null']
         zip:
           type: string
         city:
           type: string
         state:
-          type: string
-          nullable: true
+          type: [string, 'null']
         country:
           type: string
         countryCode:
@@ -1251,20 +1211,17 @@ components:
           type: string
           format: email
         company:
-          type: string
-          nullable: true
+          type: [string, 'null']
         addressLine1:
           type: string
         addressLine2:
-          type: string
-          nullable: true
+          type: [string, 'null']
         zip:
           type: string
         city:
           type: string
         state:
-          type: string
-          nullable: true
+          type: [string, 'null']
         country:
           type: string
         countryCode:
@@ -1279,8 +1236,7 @@ components:
       description: Represents a single configured print side on a saved configuration (response shape)
       properties:
         technique:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             id:
               type: string
@@ -1302,15 +1258,12 @@ components:
         artworkRatio:
           type: number
         artworkOriginalUrl:
-          type: string
-          nullable: true
+          type: [string, 'null']
         artworkConvertedUrl:
-          type: string
-          nullable: true
+          type: [string, 'null']
         foilColor:
-          nullable: true
           description: Only applicable when technique.type is heatTransfer
-          type: object
+          type: [object, 'null']
           properties:
             id:
               type: string
@@ -1326,8 +1279,7 @@ components:
       description: Input shape for writing a print side via PATCH /configuration/{id}
       properties:
         techniqueId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         fromCenter:
           type: number
         fromYOrigin:
@@ -1339,14 +1291,11 @@ components:
         artworkRatio:
           type: number
         artworkOriginalUrl:
-          type: string
-          nullable: true
+          type: [string, 'null']
         artworkConvertedUrl:
-          type: string
-          nullable: true
+          type: [string, 'null']
         foilColorId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Only applicable when technique is heatTransfer
 
     # ── Calculator ──────────────────────────────────────────────────────────
@@ -1532,8 +1481,7 @@ components:
             originalUrl:
               type: string
             convertedUrl:
-              type: string
-              nullable: true
+              type: [string, 'null']
               description: null when convert was not requested or produced no output
         - description: Upload failed
           type: object
@@ -1554,8 +1502,7 @@ components:
         id:
           type: string
         discountCode:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             id:
               type: string
@@ -1570,8 +1517,7 @@ components:
               type: string
               enum: [products-only, excludes-shipping, order-total]
         shippingOption:
-          nullable: true
-          type: object
+          type: [object, 'null']
           properties:
             method:
               type: string
@@ -1587,13 +1533,13 @@ components:
               format: date
               description: Default fastest date using standard shipping
         billingAddress:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/Address'
-          nullable: true
+            - type: 'null'
         shippingAddress:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/Address'
-          nullable: true
+            - type: 'null'
         lineItems:
           type: array
           items:
