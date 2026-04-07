@@ -9,8 +9,6 @@ This directory contains the API v2 specification. All work related to this API d
 ## Important Warnings for Agents
 
 - **This is a spec, not an implementation.** The files here describe the intended API contract. No production code has been written for v2 yet.
-- **Do not look at the current project source code** (`src/`, `prisma/`, etc.) to infer API behavior. The existing codebase reflects v1 — it does not match this spec and will lead to incorrect conclusions.
-- **All context for v2 API work lives here.** Use `README.md` as the entry point, then follow links to the relevant endpoint files.
 - **Do not apply v1 conventions** (Sanity field names, pricing in catalog objects, customization sub-routes, etc.) — these have been intentionally removed. See `README.md → What Changed from v1` for a full diff.
 
 ## Directory Structure
