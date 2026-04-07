@@ -4,8 +4,6 @@
 **Date:** 2026-03-26
 **Scope:** Customer-facing endpoints only. Backoffice, admin, system, and ERP endpoints are out of scope for this version.
 
-> This spec supersedes `docs/superpowers/specs/2026-03-25-base-product-contract-design.md`.
-
 ---
 
 ## What Changed from v1
