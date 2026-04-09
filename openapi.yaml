@@ -27,6 +27,8 @@ tags:
     description: Cart management, checkout, and order placement.
   - name: Commerce
     description: VAT validation and other commerce utilities.
+  - name: I18n
+    description: UI translation string bundles, sourced from Storyblok.
 
 paths:
 
@@ -680,6 +682,82 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  # ─── I18n ─────────────────────────────────────────────────────────────────
+
+  /i18n:
+    get:
+      tags: [I18n]
+      summary: List supported locales
+      description: >
+        Returns all locale codes that have a corresponding datasource in Storyblok.
+        The list is dynamic — adding a new Storyblok datasource makes the locale available
+        without a frontend deploy.
+        Cache: 60 minutes.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["en", "fr", "pt"]
+
+  /i18n/{locale}:
+    get:
+      tags: [I18n]
+      summary: Get translation bundle for a locale
+      description: >
+        Returns the full UI string bundle for the requested locale. Storyblok datasource
+        entries are flat key-value pairs — the API parses dot-notation keys into a nested
+        object before returning (e.g. "checkout.submit" becomes { checkout: { submit: "..." } }).
+
+
+        String values are plain text and ICU-compatible. Unlike other endpoints, this one
+        does not silently fall back to `en` — the locale is a primary resource identifier,
+        so an unsupported locale returns an error.
+
+
+        Cache: 60 minutes, keyed on `locale`.
+
+
+        Note: Storyblok webhook invalidation should be added when cache TTL becomes a pain
+        point — low effort, high value for translators.
+      parameters:
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+            example: fr
+          description: BCP 47 locale tag (e.g. `en`, `fr`, `pt`).
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/I18nBundle'
+        '400':
+          description: Locale is not a valid BCP 47 tag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_LOCALE
+                message: "xyz123 is not a valid BCP 47 locale tag"
+        '404':
+          description: Valid locale tag but no Storyblok datasource found for it
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: LOCALE_NOT_FOUND
+                message: "No translation bundle found for locale: sw"
+
   # ─── Commerce ─────────────────────────────────────────────────────────────
 
   /vat/{vatNumber}:
@@ -742,6 +820,29 @@ components:
         This parameter is part of the cache key on cacheable endpoints.
 
   schemas:
+
+    # ── I18n ────────────────────────────────────────────────────────────────
+
+    I18nBundle:
+      type: object
+      description: >
+        Nested map of UI translation strings for a given locale. Built by parsing
+        dot-notation Storyblok datasource keys into a nested object structure.
+        Values are ICU-compatible strings — plain text today, but may include
+        interpolation variables (e.g. {count}) or plural forms in the future.
+      additionalProperties:
+        oneOf:
+          - type: string
+            description: Leaf translation string (ICU-compatible)
+          - type: object
+            description: Nested group of translation strings
+            additionalProperties: {}
+      example:
+        checkout:
+          submit: "Place order"
+          back: "Back"
+        cart:
+          empty: "Your cart is empty"
 
     # ── Catalog ─────────────────────────────────────────────────────────────
 
