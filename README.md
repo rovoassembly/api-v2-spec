@@ -108,17 +108,15 @@ Base URL is TBD (may live at `/api/v2/` in the same service or as a separate pac
 |--------|------|-------------|
 | `GET` | `/vat/[vatNumber]` | Validate a VAT number |
 
-<<<<<<< feat/i18n
 ### Translations — [translations.md](./translations.md)
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/translations` | Full UI string bundle for the resolved locale |
-=======
+
 ### Countries — [countries.md](./countries.md)
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/countries` | List all supported countries for address forms |
->>>>>>> main
 
 ---
 
