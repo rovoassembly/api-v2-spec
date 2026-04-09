@@ -4,23 +4,6 @@ Endpoints for fetching UI translation strings. The API proxies content from Stor
 
 ---
 
-## List supported locales
-
-### `GET /translations`
-
-Returns all locale codes that have a corresponding datasource in Storyblok.
-
-**Response:** `string[]`
-
-```ts
-// Example
-["en", "fr", "pt"]
-```
-
-> Cache: 60 minutes. The list updates automatically when a new datasource is added to Storyblok — no frontend deploy needed.
-
----
-
 ## Get string bundle
 
 ### `GET /translations/[locale]`
@@ -68,6 +51,5 @@ String values are plain text and ICU-compatible. Interpolation variables and plu
 
 ## Behavior notes
 
-- Locale codes in the list endpoint (`GET /translations`) are derived directly from what exists in Storyblok — no hardcoded allowlist.
 - `GET /translations/{locale}` does **not** use the `?locale=` query param convention — locale is part of the path.
 - `Accept-Language` header fallback does **not** apply to this endpoint.

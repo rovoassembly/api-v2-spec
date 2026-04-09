@@ -111,7 +111,6 @@ Base URL is TBD (may live at `/api/v2/` in the same service or as a separate pac
 ### Translations — [translations.md](./translations.md)
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/translations` | List supported locales |
 | `GET` | `/translations/[locale]` | Full UI string bundle for a locale |
 
 ---

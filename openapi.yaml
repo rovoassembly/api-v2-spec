@@ -684,26 +684,6 @@ paths:
 
   # ─── Translations ─────────────────────────────────────────────────────────
 
-  /translations:
-    get:
-      tags: [Translations]
-      summary: List supported locales
-      description: >
-        Returns all locale codes that have a corresponding datasource in Storyblok.
-        The list is dynamic — adding a new Storyblok datasource makes the locale available
-        without a frontend deploy.
-        Cache: 60 minutes.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-                example: ["en", "fr", "pt"]
-
   /translations/{locale}:
     get:
       tags: [Translations]
