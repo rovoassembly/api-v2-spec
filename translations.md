@@ -1,4 +1,4 @@
-# I18n API (v2)
+# Translations API (v2)
 
 Endpoints for fetching UI translation strings. The API proxies content from Storyblok datasources and transforms flat key-value entries into nested objects.
 
@@ -6,7 +6,7 @@ Endpoints for fetching UI translation strings. The API proxies content from Stor
 
 ## List supported locales
 
-### `GET /i18n`
+### `GET /translations`
 
 Returns all locale codes that have a corresponding datasource in Storyblok.
 
@@ -23,7 +23,7 @@ Returns all locale codes that have a corresponding datasource in Storyblok.
 
 ## Get string bundle
 
-### `GET /i18n/[locale]`
+### `GET /translations/[locale]`
 
 Returns the full translation bundle for the requested locale. Storyblok datasource entries are flat key-value pairs — the API parses dot-notation keys into a nested object before returning.
 
@@ -32,7 +32,7 @@ Returns the full translation bundle for the requested locale. Storyblok datasour
 |-------|------|
 | `locale` | `string` — BCP 47 locale tag, e.g. `en`, `fr`, `pt` |
 
-**Response:** `I18nBundle`
+**Response:** `TranslationBundle`
 
 ```ts
 // Storyblok datasource (flat):
@@ -55,7 +55,7 @@ Returns the full translation bundle for the requested locale. Storyblok datasour
 String values are plain text and ICU-compatible. Interpolation variables and plural forms may be added to individual strings in the future without breaking the contract.
 
 **Error responses:**
-- `400 INVALID_LOCALE` — locale is not a valid BCP 47 tag (e.g. `/i18n/xyz123`)
+- `400 INVALID_LOCALE` — locale is not a valid BCP 47 tag (e.g. `/translations/xyz123`)
 - `404 LOCALE_NOT_FOUND` — locale is a valid BCP 47 tag but has no datasource in Storyblok
 
 > Unlike other API endpoints, this endpoint does **not** silently fall back to `en` for unsupported locales — the locale is a path segment and a primary resource identifier, so a missing resource returns an error.
@@ -68,6 +68,6 @@ String values are plain text and ICU-compatible. Interpolation variables and plu
 
 ## Behavior notes
 
-- Locale codes in the list endpoint (`GET /i18n`) are derived directly from what exists in Storyblok — no hardcoded allowlist.
-- `GET /i18n/{locale}` does **not** use the `?locale=` query param convention — locale is part of the path.
+- Locale codes in the list endpoint (`GET /translations`) are derived directly from what exists in Storyblok — no hardcoded allowlist.
+- `GET /translations/{locale}` does **not** use the `?locale=` query param convention — locale is part of the path.
 - `Accept-Language` header fallback does **not** apply to this endpoint.

@@ -27,7 +27,7 @@ tags:
     description: Cart management, checkout, and order placement.
   - name: Commerce
     description: VAT validation and other commerce utilities.
-  - name: I18n
+  - name: Translations
     description: UI translation string bundles, sourced from Storyblok.
 
 paths:
@@ -682,11 +682,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  # ─── I18n ─────────────────────────────────────────────────────────────────
+  # ─── Translations ─────────────────────────────────────────────────────────
 
-  /i18n:
+  /translations:
     get:
-      tags: [I18n]
+      tags: [Translations]
       summary: List supported locales
       description: >
         Returns all locale codes that have a corresponding datasource in Storyblok.
@@ -704,9 +704,9 @@ paths:
                   type: string
                 example: ["en", "fr", "pt"]
 
-  /i18n/{locale}:
+  /translations/{locale}:
     get:
-      tags: [I18n]
+      tags: [Translations]
       summary: Get translation bundle for a locale
       description: >
         Returns the full UI string bundle for the requested locale. Storyblok datasource
@@ -738,7 +738,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/I18nBundle'
+                $ref: '#/components/schemas/TranslationBundle'
         '400':
           description: Locale is not a valid BCP 47 tag
           content:
@@ -821,9 +821,9 @@ components:
 
   schemas:
 
-    # ── I18n ────────────────────────────────────────────────────────────────
+    # ── Translations ────────────────────────────────────────────────────────
 
-    I18nBundle:
+    TranslationBundle:
       type: object
       description: >
         Nested map of UI translation strings for a given locale. Built by parsing
