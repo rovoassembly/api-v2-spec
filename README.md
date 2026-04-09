@@ -55,7 +55,7 @@ Individual customization sub-routes removed. All configuration updates go throug
 
 See [_conventions.md](./_conventions.md) for the full rules. Summary:
 
-- **i18n** — `?locale=` query param (e.g. `?locale=pt`); defaults to `en`; silent fallback for untranslated content and unsupported locales; `locale` is part of the cache key on cacheable endpoints. Exception: `GET /translations/[locale]` uses locale as a path segment and returns errors for invalid/unsupported locales rather than falling back.
+- **i18n** — `?locale=` query param (e.g. `?locale=pt`); defaults to `en`; silent fallback for untranslated content and unsupported locales; `locale` is part of the cache key on cacheable endpoints.
 - **Errors** — `{ code: string, message: string }`; `400` validation failures include `errors: [{ field, code }]`; `code` is `UPPER_SNAKE_CASE` and the stable identifier; `message` is informational only.
 - **Pagination** — `?page=1&limit=20`; max `limit` 100; paginated responses use `{ data: T[], pagination: { page, limit, total, totalPages } }`; non-paginated endpoints return the resource directly.
 
@@ -111,7 +111,7 @@ Base URL is TBD (may live at `/api/v2/` in the same service or as a separate pac
 ### Translations — [translations.md](./translations.md)
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/translations/[locale]` | Full UI string bundle for a locale |
+| `GET` | `/translations` | Full UI string bundle for the resolved locale |
 
 ---
 

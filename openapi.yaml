@@ -684,34 +684,23 @@ paths:
 
   # ─── Translations ─────────────────────────────────────────────────────────
 
-  /translations/{locale}:
+  /translations:
     get:
       tags: [Translations]
       summary: Get translation bundle for a locale
       description: >
-        Returns the full UI string bundle for the requested locale. Storyblok datasource
+        Returns the full UI string bundle for the resolved locale. Storyblok datasource
         entries are flat key-value pairs — the API parses dot-notation keys into a nested
         object before returning (e.g. "checkout.submit" becomes { checkout: { submit: "..." } }).
-
-
-        String values are plain text and ICU-compatible. Unlike other endpoints, this one
-        does not silently fall back to `en` — the locale is a primary resource identifier,
-        so an unsupported locale returns an error.
-
-
+        String values are plain text and ICU-compatible.
+        Locale resolution follows the standard convention: `?locale=` query param, falling
+        back to `Accept-Language` header, falling back to `en`. Unsupported locales silently
+        fall back to `en`.
         Cache: 60 minutes, keyed on `locale`.
-
-
         Note: Storyblok webhook invalidation should be added when cache TTL becomes a pain
         point — low effort, high value for translators.
       parameters:
-        - name: locale
-          in: path
-          required: true
-          schema:
-            type: string
-            example: fr
-          description: BCP 47 locale tag (e.g. `en`, `fr`, `pt`).
+        - $ref: '#/components/parameters/Locale'
       responses:
         '200':
           description: OK
@@ -719,24 +708,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TranslationBundle'
-        '400':
-          description: Locale is not a valid BCP 47 tag
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_LOCALE
-                message: "xyz123 is not a valid BCP 47 locale tag"
-        '404':
-          description: Valid locale tag but no Storyblok datasource found for it
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: LOCALE_NOT_FOUND
-                message: "No translation bundle found for locale: sw"
 
   # ─── Commerce ─────────────────────────────────────────────────────────────
 

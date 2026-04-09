@@ -6,14 +6,16 @@ Endpoints for fetching UI translation strings. The API proxies content from Stor
 
 ## Get string bundle
 
-### `GET /translations/[locale]`
+### `GET /translations`
 
-Returns the full translation bundle for the requested locale. Storyblok datasource entries are flat key-value pairs — the API parses dot-notation keys into a nested object before returning.
+Returns the full translation bundle for the resolved locale. Follows the same locale resolution convention as all other endpoints: `?locale=` query param, falling back to the `Accept-Language` header, falling back to `en`. Unsupported locales silently fall back to `en`.
 
-**Path params:**
-| Param | Type |
-|-------|------|
-| `locale` | `string` — BCP 47 locale tag, e.g. `en`, `fr`, `pt` |
+Storyblok datasource entries are flat key-value pairs — the API parses dot-notation keys into a nested object before returning.
+
+**Query params:**
+| Param | Type | Default |
+|-------|------|---------|
+| `locale` | `string` — BCP 47 tag, e.g. `en`, `fr`, `pt` | `en` |
 
 **Response:** `TranslationBundle`
 
@@ -37,19 +39,6 @@ Returns the full translation bundle for the requested locale. Storyblok datasour
 
 String values are plain text and ICU-compatible. Interpolation variables and plural forms may be added to individual strings in the future without breaking the contract.
 
-**Error responses:**
-- `400 INVALID_LOCALE` — locale is not a valid BCP 47 tag (e.g. `/translations/xyz123`)
-- `404 LOCALE_NOT_FOUND` — locale is a valid BCP 47 tag but has no datasource in Storyblok
-
-> Unlike other API endpoints, this endpoint does **not** silently fall back to `en` for unsupported locales — the locale is a path segment and a primary resource identifier, so a missing resource returns an error.
-
 > Cache: 60 minutes, keyed on `locale`.
 
 > **Note:** Storyblok webhook invalidation should be added when the cache TTL becomes a pain point. On publish, the webhook should purge the cache for the affected locale. Low implementation effort, high value for translators.
-
----
-
-## Behavior notes
-
-- `GET /translations/{locale}` does **not** use the `?locale=` query param convention — locale is part of the path.
-- `Accept-Language` header fallback does **not** apply to this endpoint.
