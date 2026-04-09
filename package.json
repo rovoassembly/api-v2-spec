@@ -5,7 +5,8 @@
   "scripts": {
     "build": "redocly build-docs openapi.yaml -o public/index.html",
     "lint": "redocly lint openapi.yaml",
-    "prepare": "husky"
+    "prepare": "husky",
+    "serve": "serve . -l 3008"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
   "homepage": "https://github.com/rovoassembly/api-v2-spec#readme",
   "devDependencies": {
     "@redocly/cli": "^2.25.4",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "serve": "^14.2.6"
   }
 }
