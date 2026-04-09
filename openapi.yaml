@@ -29,6 +29,8 @@ tags:
     description: VAT validation and other commerce utilities.
   - name: Translations
     description: UI translation string bundles, sourced from Storyblok.
+  - name: Countries
+    description: Supported countries for billing and shipping address forms.
 
 paths:
 
@@ -749,6 +751,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  # ─── Countries ───────────────────────────────────────────────────────────────
+
+  /countries:
+    get:
+      tags: [Countries]
+      summary: List supported countries
+      description: >
+        Returns all countries supported by the platform, sorted alphabetically by localized name.
+        Intended for populating country selects in billing and shipping address forms.
+        Cache: 24 hours. `locale` is part of the cache key.
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
 
 # ─── Components ─────────────────────────────────────────────────────────────
 
@@ -1678,6 +1702,23 @@ components:
           description: true when automated pricing is unavailable
         error:
           type: string
+
+    # ── Countries ───────────────────────────────────────────────────────────
+
+    Country:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          description: ISO 3166-1 alpha-2 country code, e.g. "DE"
+          minLength: 2
+          maxLength: 2
+          example: DE
+        name:
+          type: string
+          description: Localized country name, e.g. "Germany"
+          example: Germany
 
     # ── Commerce ────────────────────────────────────────────────────────────
 

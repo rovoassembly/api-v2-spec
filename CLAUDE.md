@@ -23,6 +23,7 @@ docs/api/v2/
 ├── upload.md                        # POST /upload
 ├── commerce.md                      # GET /vat/[vatNumber]
 ├── translations.md                  # GET /translations/[locale]
+├── countries.md                     # GET /countries
 ├── catalog/
 │   └── catalog.md                   # GET /base-products, GET /dyes
 ├── configuration/
