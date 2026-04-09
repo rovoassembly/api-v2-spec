@@ -27,6 +27,8 @@ tags:
     description: Cart management, checkout, and order placement.
   - name: Commerce
     description: VAT validation and other commerce utilities.
+  - name: Translations
+    description: UI translation string bundles, sourced from Storyblok.
   - name: Countries
     description: Supported countries for billing and shipping address forms.
 
@@ -682,6 +684,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  # ─── Translations ─────────────────────────────────────────────────────────
+
+  /translations:
+    get:
+      tags: [Translations]
+      summary: Get translation bundle for a locale
+      description: >
+        Returns the full UI string bundle for the resolved locale. Storyblok datasource
+        entries are flat key-value pairs — the API parses dot-notation keys into a nested
+        object before returning (e.g. "checkout.submit" becomes { checkout: { submit: "..." } }).
+        String values are plain text and ICU-compatible.
+        Locale resolution follows the standard convention: `?locale=` query param, falling
+        back to `Accept-Language` header, falling back to `en`. Unsupported locales silently
+        fall back to `en`.
+        Cache: 60 minutes, keyed on `locale`.
+        Note: Storyblok webhook invalidation should be added when cache TTL becomes a pain
+        point — low effort, high value for translators.
+      parameters:
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationBundle'
+
   # ─── Commerce ─────────────────────────────────────────────────────────────
 
   /vat/{vatNumber}:
@@ -766,6 +795,29 @@ components:
         This parameter is part of the cache key on cacheable endpoints.
 
   schemas:
+
+    # ── Translations ────────────────────────────────────────────────────────
+
+    TranslationBundle:
+      type: object
+      description: >
+        Nested map of UI translation strings for a given locale. Built by parsing
+        dot-notation Storyblok datasource keys into a nested object structure.
+        Values are ICU-compatible strings — plain text today, but may include
+        interpolation variables (e.g. {count}) or plural forms in the future.
+      additionalProperties:
+        oneOf:
+          - type: string
+            description: Leaf translation string (ICU-compatible)
+          - type: object
+            description: Nested group of translation strings
+            additionalProperties: {}
+      example:
+        checkout:
+          submit: "Place order"
+          back: "Back"
+        cart:
+          empty: "Your cart is empty"
 
     # ── Catalog ─────────────────────────────────────────────────────────────
 

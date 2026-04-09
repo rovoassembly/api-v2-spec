@@ -22,6 +22,7 @@ docs/api/v2/
 ├── calculator.md                    # GET /calculator
 ├── upload.md                        # POST /upload
 ├── commerce.md                      # GET /vat/[vatNumber]
+├── translations.md                  # GET /translations/[locale]
 ├── countries.md                     # GET /countries
 ├── catalog/
 │   └── catalog.md                   # GET /base-products, GET /dyes
