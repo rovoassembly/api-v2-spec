@@ -108,6 +108,11 @@ Base URL is TBD (may live at `/api/v2/` in the same service or as a separate pac
 |--------|------|-------------|
 | `GET` | `/vat/[vatNumber]` | Validate a VAT number |
 
+### Countries — [countries.md](./countries.md)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/countries` | List all supported countries for address forms |
+
 ---
 
 ## Removed Endpoints
